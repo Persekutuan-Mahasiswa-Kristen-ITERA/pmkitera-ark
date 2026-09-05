@@ -5,7 +5,7 @@
 <h1 align="center">PMK ARK — Archive & Resource Knowledge</h1>
 
 <p align="center">
-  <strong>Repositori Resmi Arsip Digital <a href="https://pmk.itera.ac.id">PMK ITERA</a></strong> (Persekutuan Mahasiswa Kristen Institut Teknologi Sumatera)
+  <strong>Repositori Resmi Arsip Digital <a href="https://pmkitera.web.id">PMK ITERA</a></strong> (Persekutuan Mahasiswa Kristen Institut Teknologi Sumatera)
 </p>
 
 <p align="center">
