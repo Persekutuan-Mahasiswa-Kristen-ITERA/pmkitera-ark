@@ -82,6 +82,7 @@ export function QRCodeModal({
 
         <div className="bg-white p-4 rounded-xl border border-line inline-block shadow-inner mb-6">
           {qrDataUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={qrDataUrl}
               alt="QR Code"
