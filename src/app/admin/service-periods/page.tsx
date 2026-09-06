@@ -23,9 +23,9 @@ export default function AdminServicePeriodsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Period | null>(null);
 
   const [form, setForm] = useState({
-    name: "2025/2026",
-    start_date: "2025-07-01",
-    end_date: "2026-06-30",
+    name: "2026/2027",
+    start_date: "2026-07-01",
+    end_date: "2027-06-30",
   });
 
   const fetchPeriods = async () => {
@@ -73,7 +73,7 @@ export default function AdminServicePeriodsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-serif font-bold text-primary">Kelola Periode Pelayanan</h1>
-          <p className="text-sm text-muted mt-1">Periode kepengurusan (misal: 2025/2026) untuk pengarsipan rapi.</p>
+          <p className="text-sm text-muted mt-1">Periode kepengurusan (misal: 2026/2027) untuk pengarsipan rapi.</p>
         </div>
         <Button onClick={() => setIsModalOpen(true)}>
           <Plus className="w-4 h-4 mr-2" /> Tambah Periode
@@ -121,7 +121,7 @@ export default function AdminServicePeriodsPage() {
             <Input
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="Contoh: 2025/2026"
+              placeholder="Contoh: 2026/2027"
               required
             />
           </div>

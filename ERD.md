@@ -29,7 +29,7 @@ erDiagram
 
     SERVICE_PERIODS {
         bigint id PK
-        string name "contoh: 2025/2026"
+        string name "contoh: 2026/2027"
         date start_date
         date end_date
     }

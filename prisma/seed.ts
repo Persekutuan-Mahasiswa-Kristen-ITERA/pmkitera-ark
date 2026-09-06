@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 // Password default akun dev — seeder ini hanya untuk development, jangan dipakai di produksi.
-const DEV_PASSWORD = "pmkark2025";
+const DEV_PASSWORD = "pmkark2026";
 
 async function main() {
   console.log("🌱 Starting seed...");
@@ -14,12 +14,11 @@ async function main() {
     where: { slug: "ibadah-jumat" },
     update: {},
     create: {
-      name: "Ibadah Jumat",
+      name: "PPT Ibadah Jumat",
       slug: "ibadah-jumat",
       description: "Slide PPT pelayan Ibadah Raya Jumat PMK ITERA",
     },
   });
-
   const wartaMingguan = await prisma.category.upsert({
     where: { slug: "warta-mingguan" },
     update: {},
@@ -45,9 +44,9 @@ async function main() {
   // 2. Service Periods
   const period2025 = await prisma.servicePeriod.create({
     data: {
-      name: "2025/2026",
-      start_date: new Date("2025-07-01"),
-      end_date: new Date("2026-06-30"),
+      name: "2026/2027",
+      start_date: new Date("2026-07-01"),
+      end_date: new Date("2027-06-30"),
     },
   });
 
@@ -86,7 +85,7 @@ async function main() {
     },
   });
 
-  console.log("✅ Users created (password dev: pmkark2025)");
+  console.log("✅ Users created (password dev: pmkark2026)");
 
   // 4. Sample Documents
   await prisma.document.createMany({
@@ -95,22 +94,22 @@ async function main() {
         title: "PPT Ibadah Jumat — 'Hidup Bermakna dalam Kristus'",
         category_id: ibadahJumat.id,
         service_period_id: period2025.id,
-        event_date: new Date("2025-09-05"),
+        event_date: new Date("2026-09-05"),
         speaker: "Pdt. Budi Santoso",
-        description: "Bahan tayang ibadah jumat rutin PMK ITERA minggu pertama September 2025.",
-        file_path: "documents/2025/09/ppt-ibadah-jumat-05092025.pptx",
+        description: "Bahan tayang ibadah jumat rutin PMK ITERA minggu pertama September 2026.",
+        file_path: "documents/2026/09/ppt-ibadah-jumat-05092026.pptx",
         file_type: "pptx",
         status: "published",
         uploaded_by: pengurusUser.id,
       },
       {
-        title: "Warta Minggu II September 2025",
+        title: "Warta Minggu II September 2026",
         category_id: wartaMingguan.id,
         service_period_id: period2025.id,
-        event_date: new Date("2025-09-12"),
+        event_date: new Date("2026-09-12"),
         speaker: "Divisi Kominfo",
         description: "Info kegiatan persekutuan, jadwal kelompok kecil, dan pokok doa.",
-        file_path: "documents/2025/09/warta-12092025.pdf",
+        file_path: "documents/2026/09/warta-12092026.pdf",
         file_type: "pdf",
         status: "published",
         uploaded_by: pengurusUser.id,
@@ -119,10 +118,10 @@ async function main() {
         title: "Khotbah — 'Setia dalam Perkara Kecil'",
         category_id: khotbah.id,
         service_period_id: period2025.id,
-        event_date: new Date("2025-09-12"),
+        event_date: new Date("2026-09-12"),
         speaker: "Ev. Daniel Wijaya",
         description: "Materi khotbah pemuda tentang integritas di lingkungan kampus.",
-        file_path: "documents/2025/09/khotbah-12092025.pptx",
+        file_path: "documents/2026/09/khotbah-12092026.pptx",
         file_type: "pptx",
         status: "draft",
         uploaded_by: pengurusUser.id,
