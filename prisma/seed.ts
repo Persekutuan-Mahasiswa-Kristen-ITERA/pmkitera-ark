@@ -65,22 +65,22 @@ async function main() {
   const hashedPassword = await bcrypt.hash(DEV_PASSWORD, 10);
 
   const adminUser = await prisma.user.upsert({
-    where: { email: "admin@pmkitera.org" },
+    where: { email: "admin@pmkitera.web.id" },
     update: { password: hashedPassword },
     create: {
       name: "Admin PMK ITERA",
-      email: "admin@pmkitera.org",
+      email: "admin@pmkitera.web.id",
       role: "admin",
       password: hashedPassword,
     },
   });
 
   const pengurusUser = await prisma.user.upsert({
-    where: { email: "pengurus@pmkitera.org" },
+    where: { email: "pengurus@pmkitera.web.id" },
     update: { password: hashedPassword },
     create: {
       name: "Pengurus Acara",
-      email: "pengurus@pmkitera.org",
+      email: "pengurus@pmkitera.web.id",
       role: "pengurus",
       password: hashedPassword,
     },
