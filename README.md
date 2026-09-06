@@ -240,7 +240,7 @@ Kredit & atribusi ke **PMK ITERA** sangat diapresiasi.
 | Peran | Nama |
 |-------|------|
 | **Project Lead** | Febrian Yoel Anggara Saputra (NIM 124140031) |
-| **Asisten Dosen Agama Protestan** | Martin Clinton, S.Kom., M.Kom. |
+| **Pembina PMK ITERA** | Martin Clinton, S.Kom., M.Kom. |
 | **Organisasi** | Persekutuan Mahasiswa Kristen (PMK) ITERA |
 
 ---
