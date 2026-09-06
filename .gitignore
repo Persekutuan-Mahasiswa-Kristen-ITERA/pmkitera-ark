@@ -62,3 +62,6 @@ prisma/*.db-journal
 # Local assets (optional: uncomment if you don't want these committed)
 # public/uploads/
 # public/documents/
+
+ppt-launch/
+ppt launching pmk ark.pdf
