@@ -1,0 +1,94 @@
+// Prisma Schema untuk PMK ARK — Archive & Resource Knowledge
+// Sumber kebenaran struktur database mengikuti ERD.md
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id         BigInt   @id @default(autoincrement())
+  auth_id    String?  @unique // ID opsional dari Supabase Auth / OAuth
+  name       String
+  email      String   @unique
+  password   String? // Nullable bila menggunakan Supabase Auth / OAuth
+  role       String   @default("jemaat") // admin | pengurus | jemaat
+  created_at DateTime @default(now())
+
+  // Relasi
+  documents Document[] @relation("UserDocuments")
+
+  @@map("users")
+}
+
+model Category {
+  id          BigInt  @id @default(autoincrement())
+  name        String
+  slug        String  @unique
+  description String?
+
+  // Relasi
+  documents Document[]
+
+  @@map("categories")
+}
+
+model ServicePeriod {
+  id         BigInt   @id @default(autoincrement())
+  name       String // contoh: 2025/2026
+  start_date DateTime
+  end_date   DateTime
+
+  // Relasi
+  documents Document[]
+
+  @@map("service_periods")
+}
+
+model Document {
+  id                BigInt   @id @default(autoincrement())
+  title             String
+  category_id       BigInt
+  service_period_id BigInt
+  event_date        DateTime
+  speaker           String // pengkhotbah / pengisi
+  description       String?
+  file_path         String // Key/Path file di Cloudflare R2
+  file_type         String // pptx | pdf
+  thumbnail_path    String? // Nullable, digunakan Fase 2
+  status            String   @default("draft") // draft | published
+  uploaded_by       BigInt
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  // Relasi
+  category       Category          @relation(fields: [category_id], references: [id], onDelete: Restrict)
+  service_period ServicePeriod     @relation(fields: [service_period_id], references: [id], onDelete: Restrict)
+  uploader       User              @relation("UserDocuments", fields: [uploaded_by], references: [id], onDelete: Restrict)
+  notifications  NotificationLog[]
+
+  // Indexing sesuai saran ERD.md untuk kecepatan filter
+  @@index([category_id])
+  @@index([service_period_id])
+  @@index([event_date])
+  @@index([status])
+  @@map("documents")
+}
+
+model NotificationLog {
+  id          BigInt   @id @default(autoincrement())
+  document_id BigInt
+  channel     String // whatsapp | telegram
+  status      String // sent | failed
+  sent_at     DateTime @default(now())
+
+  // Relasi
+  document Document @relation(fields: [document_id], references: [id], onDelete: Cascade)
+
+  @@map("notification_logs")
+}

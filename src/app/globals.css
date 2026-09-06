@@ -1,26 +1,47 @@
 @import "tailwindcss";
 
+/* ===========================================================
+   PMK ARK — Design Tokens
+   Sumber kebenaran tunggal untuk warna & tipografi.
+   Jangan hardcode hex di komponen lain; pakai class Tailwind
+   yang di-bridge dari variabel CSS di bawah ini.
+   =========================================================== */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Color tokens — sesuai PRD §9 */
+  --color-bg: #F5F1E8;
+  --color-bg-alt: #EFE9DC;
+  --color-text-primary: #3D2A1A;
+  --color-text-muted: #6B5D4F;
+  --color-accent: #A05A34;
+  --color-accent-hover: #8A4A29;
+  --color-card-bg: #FFFFFF;
+  --color-border: #E3DCCB;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* Bridge ke utility Tailwind: bg-app, text-primary, border-line, dll */
+  --color-app: var(--color-bg);
+  --color-app-alt: var(--color-bg-alt);
+  --color-primary: var(--color-text-primary);
+  --color-muted: var(--color-text-muted);
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-card: var(--color-card-bg);
+  --color-line: var(--color-border);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Font */
+  --font-heading: var(--font-serif);
+  --font-body: var(--font-sans);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif), Georgia, serif;
+  color: var(--color-text-primary);
 }
