@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { Header, Footer } from "@/components/public/Header";
+import { ArchiveFilterBar } from "@/components/public/ArchiveFilterBar";
 import { Card } from "@/components/ui/Card";
-import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
-import { Search, Calendar, User, ArrowRight, BookOpen, Download, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, User, ArrowRight, BookOpen, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { listWorshipServices } from "@/services/document-service";
 import { listCategories } from "@/services/category-service";
 
@@ -59,66 +58,17 @@ export default async function ArchivePage({
       </section>
 
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
-        {/* Filter Bar */}
-        <form method="GET" action="/arsip" className="mb-10 bg-card p-6 rounded-2xl border border-line shadow-xs">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="md:col-span-2 relative">
-              <Search className="absolute left-3 top-3.5 w-4 h-4 text-muted" />
-              <Input
-                name="q"
-                defaultValue={search || ""}
-                placeholder="Cari judul dokumen atau nama pengkhotbah..."
-                className="pl-9"
-              />
-            </div>
-
-            <Select name="category" defaultValue={categoryId?.toString() || ""}>
-              <option value="">Semua Kategori</option>
-              {categories.map((c) => (
-                <option key={c.id.toString()} value={c.id.toString()}>
-                  {c.name}
-                </option>
-              ))}
-            </Select>
-
-            <div className="grid grid-cols-2 gap-2">
-              <Select name="month" defaultValue={month?.toString() || ""}>
-                <option value="">Bulan</option>
-                {MONTHS.map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
-                  </option>
-                ))}
-              </Select>
-              <Select name="year" defaultValue={year?.toString() || ""}>
-                <option value="">Tahun</option>
-                {years.map((y) => (
-                  <option key={y} value={y.toString()}>
-                    {y}
-                  </option>
-                ))}
-              </Select>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between mt-4 pt-4 border-t border-line">
-            <p className="text-xs text-muted">
-              Menemukan <strong className="text-primary">{result.totalGroups}</strong> ibadah (folder)
-            </p>
-            <div className="flex gap-2">
-              {(categoryId || year || month || search) && (
-                <Link href="/arsip">
-                  <Button variant="outline" size="sm">
-                    Reset Filter
-                  </Button>
-                </Link>
-              )}
-              <Button type="submit" size="sm">
-                Terapkan Filter
-              </Button>
-            </div>
-          </div>
-        </form>
+        {/* Filter Bar Component */}
+        <ArchiveFilterBar
+          categories={categories}
+          search={search}
+          categoryId={categoryId}
+          month={month}
+          year={year}
+          totalGroups={result.totalGroups}
+          years={years}
+          MONTHS={MONTHS}
+        />
 
         {/* Result Grid - Grup per Tanggal Ibadah */}
         {result.groups.length === 0 ? (

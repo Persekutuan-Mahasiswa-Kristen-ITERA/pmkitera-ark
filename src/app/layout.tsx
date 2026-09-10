@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
+import { Suspense } from "react";
+import { NavigationProgress } from "@/components/common/NavigationProgress";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -22,9 +24,14 @@ export const metadata: Metadata = {
   description:
     "Repositori dokumen pelayanan mingguan PMK ITERA: PPT Ibadah Jum'at, Warta Mingguan, dan PPT Khotbah.",
   icons: {
-    icon: "/logo-pmk.avif",
-    shortcut: "/logo-pmk.avif",
-    apple: "/logo-pmk.avif",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon.png", type: "image/png" },
+      { url: "/logo-pmk.png", type: "image/png" },
+      { url: "/logo-pmk.avif", type: "image/avif" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/icon.png",
   },
 };
 
@@ -38,7 +45,12 @@ export default function RootLayout({
       lang="id"
       className={`${playfair.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <Suspense fallback={null}>
+          <NavigationProgress />
+        </Suspense>
+        {children}
+      </body>
     </html>
   );
 }
