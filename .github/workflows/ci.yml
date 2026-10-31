@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Placeholder values only. Nothing in CI connects to Postgres or R2:
+    # prisma generate needs a datasource URL to load prisma.config.ts, and
+    # next build imports the R2 client, which validates these at module load.
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci?pgbouncer=true
+      DIRECT_URL: postgresql://ci:ci@localhost:5432/ci
+      SESSION_SECRET: ci-placeholder-session-secret-not-used-0000000000
+      R2_ACCOUNT_ID: ci-placeholder
+      R2_ACCESS_KEY_ID: ci-placeholder
+      R2_SECRET_ACCESS_KEY: ci-placeholder
+      R2_BUCKET_NAME: ci-placeholder
+      R2_PUBLIC_URL: https://files.invalid
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm exec prisma generate
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm exec next build
