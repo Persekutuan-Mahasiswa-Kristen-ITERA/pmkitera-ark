@@ -393,7 +393,7 @@ describe("listWorshipServices", () => {
 
     const [distinctCall, docsCall] = db.document.findMany.mock.calls.map((c) => c[0]);
     expect(distinctCall).toMatchObject({ where: { status: "published" }, distinct: ["event_date"] });
-    expect(docsCall.where.OR).toEqual([
+    expect(docsCall.where.AND[0].OR).toEqual([
       { event_date: { gte: at(2026, 9, 11), lte: new Date(2026, 8, 11, 23, 59, 59, 999) } },
       { event_date: { gte: at(2026, 9, 4), lte: new Date(2026, 8, 4, 23, 59, 59, 999) } },
     ]);
@@ -425,12 +425,8 @@ describe("listWorshipServices", () => {
     expect(second).toMatchObject({ status: "published", category_id: BigInt(3) });
   });
 
-  // BUG (not fixed here, see report): the second query builds
-  // `{ ...where, OR: dayRanges }`, so the day-range OR overwrites the search OR.
-  // A search on /arsip finds the right dates but then lists every published
-  // document on those dates, while the category filter is still applied.
-  // Enable once the search clause is combined with the date ranges (e.g. AND).
-  it.skip("keeps the search clause when loading the documents for each date", async () => {
+  // Regresi: OR rentang tanggal dulu menimpa OR pencarian.
+  it("keeps the search clause when loading the documents for each date", async () => {
     db.document.findMany.mockResolvedValueOnce([{ event_date: at(2026, 9, 4) }]).mockResolvedValueOnce([]);
     await listWorshipServices({ search: "paskah" });
     const second = JSON.stringify(db.document.findMany.mock.calls[1][0].where);

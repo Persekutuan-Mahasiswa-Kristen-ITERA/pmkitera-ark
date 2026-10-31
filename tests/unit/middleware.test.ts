@@ -101,13 +101,8 @@ describe("middleware admin guard", () => {
     expectRedirectToLogin(await middleware(request("/admin", token)));
   });
 
-  // BUG (not fixed here, see report): when SESSION_SECRET is unset or shorter
-  // than 32 chars, the middleware falls back to a hard-coded secret that is
-  // visible in the source. A token signed with that public string passes the
-  // /admin guard, so a misconfigured deployment lets anyone into the admin UI
-  // (the API routes still reject it because session.ts throws instead).
-  // Enable this test once the middleware fails closed without a secret.
-  it.skip("rejects a token signed with the built-in fallback secret when SESSION_SECRET is missing", async () => {
+  // Regresi: middleware dulu memakai secret cadangan yang tertulis di kode.
+  it("rejects a token signed with the built-in fallback secret when SESSION_SECRET is missing", async () => {
     vi.stubEnv("SESSION_SECRET", "");
     const token = await sign(
       { userId: 1, email: "u@example.test", role: "admin" },
