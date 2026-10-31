@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   verify:
-    name: Lint, typecheck, test
+    name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -53,6 +53,17 @@ jobs:
       - name: Unit tests
         run: pnpm test
 
-      # No `next build` step: src/app/layout.tsx uses next/font/google, which
-      # downloads Inter and Playfair Display from Google Fonts at build time,
-      # so the build cannot run offline. Vercel still builds on deploy.
+      # Needs network: next/font/google (src/app/layout.tsx) downloads Inter and
+      # Playfair Display from Google Fonts at build time. The values below are
+      # fake placeholders; the R2 client validates them at import time and
+      # nothing connects to Postgres or R2 during the build.
+      - name: Build
+        run: pnpm build
+        env:
+          SESSION_SECRET: ci-placeholder-session-secret-not-used-0000000000
+          R2_ACCOUNT_ID: ci-placeholder
+          R2_ACCESS_KEY_ID: ci-placeholder
+          R2_SECRET_ACCESS_KEY: ci-placeholder
+          R2_BUCKET_NAME: ci-placeholder
+          R2_PUBLIC_URL: https://files.invalid
+          NEXT_TELEMETRY_DISABLED: "1"
