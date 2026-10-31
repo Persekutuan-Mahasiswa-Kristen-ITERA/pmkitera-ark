@@ -3,12 +3,12 @@ import { jwtVerify } from "jose";
 
 const SESSION_COOKIE = "pmk-ark-session";
 
-function getSecret(): Uint8Array {
+function getSecret(): Uint8Array | null {
   const secret = process.env.SESSION_SECRET;
-  if (!secret || secret.length < 32) {
-    // Di middleware (Edge), throw akan bikin request gagal — kembalikan key dummy (invalid) agar gagal verifikasi token & redirect ke login
-    return new TextEncoder().encode("invalid-dummy-secret-to-prevent-bypass-000000000000");
-  }
+  // Di middleware (Edge), throw akan bikin request gagal. Tanpa secret yang valid,
+  // kembalikan null agar semua token ditolak (jangan pakai secret cadangan yang
+  // tertulis di kode, karena token yang ditandatangani dengannya akan lolos).
+  if (!secret || secret.length < 32) return null;
   return new TextEncoder().encode(secret);
 }
 
@@ -26,7 +26,9 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL("/admin/login", req.url));
     }
     try {
-      const { payload } = await jwtVerify(token, getSecret());
+      const secret = getSecret();
+      if (!secret) throw new Error("SESSION_SECRET belum diset");
+      const { payload } = await jwtVerify(token, secret);
       const role = payload.role as string;
       if (!["admin", "pengurus"].includes(role)) {
         return NextResponse.redirect(new URL("/admin/login", req.url));

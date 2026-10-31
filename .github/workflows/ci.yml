@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Placeholder values only; nothing in CI connects to Postgres or R2.
+    # prisma.config.ts calls env("DIRECT_URL"), which throws when it is unset,
+    # and `pnpm install` runs `prisma generate` from postinstall, so the URLs
+    # must exist for the whole job. Unit tests stub their own env.
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci?pgbouncer=true
+      DIRECT_URL: postgresql://ci:ci@localhost:5432/ci
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm exec prisma generate
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      # Needs network: next/font/google (src/app/layout.tsx) downloads Inter and
+      # Playfair Display from Google Fonts at build time. The values below are
+      # fake placeholders; the R2 client validates them at import time and
+      # nothing connects to Postgres or R2 during the build.
+      - name: Build
+        run: pnpm build
+        env:
+          SESSION_SECRET: ci-placeholder-session-secret-not-used-0000000000
+          R2_ACCOUNT_ID: ci-placeholder
+          R2_ACCESS_KEY_ID: ci-placeholder
+          R2_SECRET_ACCESS_KEY: ci-placeholder
+          R2_BUCKET_NAME: ci-placeholder
+          R2_PUBLIC_URL: https://files.invalid
+          NEXT_TELEMETRY_DISABLED: "1"

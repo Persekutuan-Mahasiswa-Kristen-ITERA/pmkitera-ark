@@ -353,7 +353,8 @@ export async function listWorshipServices(filter: Omit<ListFilter, "page" | "pag
   });
 
   const docs = await prisma.document.findMany({
-    where: { ...where, OR: dayRanges.map((r) => ({ event_date: r })) },
+    // AND, bukan OR di level atas: OR milik pencarian (judul/pengkhotbah) harus tetap berlaku.
+    where: { ...where, AND: [{ OR: dayRanges.map((r) => ({ event_date: r })) }] },
     include: { category: true, service_period: true },
     orderBy: { event_date: "desc" },
   });
