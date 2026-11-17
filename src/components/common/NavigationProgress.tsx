@@ -87,7 +87,11 @@ export function NavigationProgress() {
     const handleFormSubmit = (e: SubmitEvent) => {
       const form = e.target as HTMLFormElement;
       if (form && form.method.toLowerCase() === "get") {
-        setIsLoading(true);
+        // React's onSubmit runs after this native listener; a form handled in JS (preventDefault,
+        // e.g. the login form) does not navigate, so only show progress if nobody cancelled it.
+        setTimeout(() => {
+          if (!e.defaultPrevented) setIsLoading(true);
+        }, 0);
       }
     };
 

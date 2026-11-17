@@ -1,10 +1,9 @@
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
-// Password default akun dev — seeder ini hanya untuk development, jangan dipakai di produksi.
-const DEV_PASSWORD = "pmkark2026";
+// Development only. Logins come from PI-CORE (D-16); these rows are uploaders of the sample documents,
+// like the historical accounts in production. A PI-CORE account with the same email is linked on login.
 
 async function main() {
   console.log("🌱 Starting seed...");
@@ -60,32 +59,20 @@ async function main() {
 
   console.log("✅ Service Periods created");
 
-  // 3. Users (Admin & Pengurus) — password di-hash bcrypt, tidak pernah plaintext
-  const hashedPassword = await bcrypt.hash(DEV_PASSWORD, 10);
-
+  // 3. Users: local records only (no password; nobody logs in with these)
   const adminUser = await prisma.user.upsert({
     where: { email: "admin@pmkitera.web.id" },
-    update: { password: hashedPassword },
-    create: {
-      name: "Admin PMK ITERA",
-      email: "admin@pmkitera.web.id",
-      role: "admin",
-      password: hashedPassword,
-    },
+    update: { password: null },
+    create: { name: "Admin PMK ITERA", email: "admin@pmkitera.web.id", role: "admin", password: null },
   });
 
   const pengurusUser = await prisma.user.upsert({
     where: { email: "pengurus@pmkitera.web.id" },
-    update: { password: hashedPassword },
-    create: {
-      name: "Pengurus Acara",
-      email: "pengurus@pmkitera.web.id",
-      role: "pengurus",
-      password: hashedPassword,
-    },
+    update: { password: null },
+    create: { name: "Pengurus Acara", email: "pengurus@pmkitera.web.id", role: "pengurus", password: null },
   });
 
-  console.log("✅ Users created (password dev: pmkark2026)");
+  console.log("✅ Users created (records only; log in with a PI-CORE account)");
 
   // 4. Sample Documents
   await prisma.document.createMany({
