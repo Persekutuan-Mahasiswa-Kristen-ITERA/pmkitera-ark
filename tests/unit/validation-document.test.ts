@@ -18,8 +18,8 @@ const validDocument = {
   description: "",
 };
 
-function issuePaths(result: { success: boolean; error?: { issues: { path: (string | number)[] }[] } }) {
-  return (result.error?.issues ?? []).map((i) => i.path.join("."));
+function issuePaths(result: { success: boolean; error?: { issues: { path: PropertyKey[] }[] } }) {
+  return (result.error?.issues ?? []).map((i) => i.path.map(String).join("."));
 }
 
 describe("enums", () => {
@@ -69,7 +69,7 @@ describe("createDocumentSchema", () => {
       speaker: "a",
     });
     expect(result.success).toBe(false);
-    const messages = Object.fromEntries(result.error!.issues.map((i) => [i.path.join("."), i.message]));
+    const messages = Object.fromEntries(result.error!.issues.map((i) => [i.path.map(String).join("."), i.message]));
     expect(messages).toEqual({
       title: "Judul minimal 3 karakter",
       category_id: "Kategori wajib dipilih",

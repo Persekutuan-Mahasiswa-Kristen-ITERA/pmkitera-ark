@@ -4,7 +4,9 @@ export const documentStatusSchema = z.enum(["draft", "published"]);
 export const fileTypeSchema = z.enum(["pptx", "pdf"]);
 export const userRoleSchema = z.enum(["admin", "pengurus", "jemaat"]);
 
-export const createDocumentSchema = z.object({
+// Shared fields. `status` gets its "draft" default only on create: in zod 4 a default survives
+// .partial(), so an update without a status would otherwise reset a published document to draft.
+const documentFields = z.object({
   title: z.string().min(3, "Judul minimal 3 karakter").max(200),
   category_id: z.coerce.number().int().positive("Kategori wajib dipilih"),
   service_period_id: z.coerce.number().int().positive("Periode pelayanan wajib dipilih"),
@@ -13,12 +15,16 @@ export const createDocumentSchema = z.object({
     .refine((v) => !Number.isNaN(Date.parse(v)), "Tanggal tidak valid"),
   speaker: z.string().min(2, "Pengisi wajib diisi").max(150),
   description: z.string().max(2000).optional().or(z.literal("")),
+  status: documentStatusSchema,
+});
+
+export const createDocumentSchema = documentFields.extend({
   status: documentStatusSchema.default("draft"),
 });
 
 // Field tambahan yang tidak di-validate dari klien: file_type akan di-infer
 // otomatis dari ekstensi file yang di-upload (lihat document-service.ts).
-export const updateDocumentSchema = createDocumentSchema.partial();
+export const updateDocumentSchema = documentFields.partial();
 
 export const categorySchema = z.object({
   name: z.string().min(2).max(100),
