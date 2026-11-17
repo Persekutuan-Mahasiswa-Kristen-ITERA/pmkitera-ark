@@ -1,3 +1,8 @@
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
+
+# Security: patched transitive versions (Next pins postcss 8.4.31; Prisma's config uses deepmerge-ts 7).
+overrides:
+  postcss@<8.5.23: ^8.5.23
+  deepmerge-ts@<8: ^8.0.0
