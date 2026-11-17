@@ -50,8 +50,11 @@ R2_PUBLIC_URL="https://pub-[HASH].r2.dev"
 STORAGE_ENDPOINT="https://[ACCOUNT_ID].r2.cloudflarestorage.com"
 STORAGE_REGION="auto"
 
-# App Session Secret (minimal 32 karakter acak)
-SESSION_SECRET="ganti-dengan-string-rahasia-panjang-di-production"
+# Login dengan akun PI-CORE (PI-CORE D-16). Ketiganya nilai publik, bukan rahasia.
+# Akses ARK diatur di PI-CORE > Integrasi > PMK ARK (peran "admin" dan "pengurus").
+NEXT_PUBLIC_PICORE_URL="https://core.pmkitera.web.id"
+NEXT_PUBLIC_PICORE_SUPABASE_URL="https://[PI-CORE-REF].supabase.co"
+NEXT_PUBLIC_PICORE_SUPABASE_PUBLISHABLE_KEY="sb_publishable_..."
 ```
 
 ---
@@ -109,4 +112,4 @@ Karena aplikasi menggunakan **Storage Service Abstraction Layer** (`src/lib/stor
 
 - **Error koneksi database (P1001)**: Periksa kembali `DATABASE_URL` dan pastikan IP Supabase Anda tidak diblokir firewall.
 - **Upload file gagal / timeout**: Pastikan ukuran file tidak melebihi 50MB dan kredensial Cloudflare R2 (`R2_ACCESS_KEY_ID` dan `R2_SECRET_ACCESS_KEY`) benar.
-- **Session login terhapus**: Pastikan `SESSION_SECRET` di environment production tidak berubah-ubah antar deploy.
+- **Tidak bisa masuk / "belum punya akses ke PMK ARK"**: login memakai akun PI-CORE. Pastikan orangnya punya akun PI-CORE yang aktif, sudah mengganti kata sandi sementara, dan mendapat peran ARK di PI-CORE > Integrasi > PMK ARK.

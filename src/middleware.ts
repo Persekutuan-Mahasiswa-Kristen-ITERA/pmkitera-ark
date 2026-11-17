@@ -1,46 +1,47 @@
-import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
 
-const SESSION_COOKIE = "pmk-ark-session";
-
-function getSecret(): Uint8Array | null {
-  const secret = process.env.SESSION_SECRET;
-  // Di middleware (Edge), throw akan bikin request gagal. Tanpa secret yang valid,
-  // kembalikan null agar semua token ditolak (jangan pakai secret cadangan yang
-  // tertulis di kode, karena token yang ditandatangani dengannya akan lolos).
-  if (!secret || secret.length < 32) return null;
-  return new TextEncoder().encode(secret);
-}
-
+/**
+ * Gate for /admin (PI-CORE D-16). Only checks that a PI-CORE session exists (JWT verified locally
+ * by getClaims) and refreshes it; whether the person has an ARK role is decided on the server by
+ * getAccessStatus() (pages and API routes), because that needs a call to PI-CORE.
+ * Without the PI-CORE env every /admin request goes to the login page (fail closed).
+ */
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  if (pathname === "/admin/login") return NextResponse.next();
 
-  // Izinkan halaman login tanpa session (hindari redirect loop)
-  if (pathname === "/admin/login") {
-    return NextResponse.next();
-  }
+  const url = process.env.NEXT_PUBLIC_PICORE_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_PICORE_SUPABASE_PUBLISHABLE_KEY;
+  const toLogin = () => NextResponse.redirect(new URL("/admin/login", req.url));
+  if (!url || !key) return toLogin();
 
-  if (pathname.startsWith("/admin")) {
-    const token = req.cookies.get(SESSION_COOKIE)?.value;
-    if (!token) {
-      return NextResponse.redirect(new URL("/admin/login", req.url));
-    }
-    try {
-      const secret = getSecret();
-      if (!secret) throw new Error("SESSION_SECRET belum diset");
-      const { payload } = await jwtVerify(token, secret);
-      const role = payload.role as string;
-      if (!["admin", "pengurus"].includes(role)) {
-        return NextResponse.redirect(new URL("/admin/login", req.url));
-      }
-    } catch {
-      // Token invalid / secret belum diset / expired
-      const res = NextResponse.redirect(new URL("/admin/login", req.url));
-      res.cookies.delete(SESSION_COOKIE);
-      return res;
-    }
+  const response = NextResponse.next({ request: req });
+  const supabase = createServerClient(url, key, {
+    cookies: {
+      getAll() {
+        return req.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value));
+        cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+      },
+    },
+  });
+
+  let userId: string | undefined;
+  try {
+    const { data } = await supabase.auth.getClaims();
+    userId = data?.claims.sub;
+  } catch {
+    userId = undefined;
   }
-  return NextResponse.next();
+  if (!userId) {
+    const redirect = toLogin();
+    for (const cookie of response.cookies.getAll()) redirect.cookies.set(cookie);
+    return redirect;
+  }
+  return response;
 }
 
 export const config = {

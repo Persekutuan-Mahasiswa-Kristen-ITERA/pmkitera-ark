@@ -1,11 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-
-const findUnique = vi.fn();
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: { user: { findUnique: (...args: unknown[]) => findUnique(...args) } },
-}));
-
-import { getUserFromSession, hasRoleAtLeast, ROLE_HIERARCHY } from "@/lib/auth/roles";
+import { describe, expect, it } from "vitest";
+import { arkRoleFrom, hasRoleAtLeast, ROLE_HIERARCHY } from "@/lib/auth/roles";
 
 describe("ROLE_HIERARCHY", () => {
   it("orders jemaat < pengurus < admin", () => {
@@ -30,10 +24,15 @@ describe("hasRoleAtLeast", () => {
   });
 });
 
-describe("getUserFromSession", () => {
-  it("looks the user up by auth_id", async () => {
-    findUnique.mockResolvedValue({ id: BigInt(1) });
-    await expect(getUserFromSession("auth-123")).resolves.toEqual({ id: BigInt(1) });
-    expect(findUnique).toHaveBeenCalledWith({ where: { auth_id: "auth-123" } });
+describe("arkRoleFrom (PI-CORE my_app_roles)", () => {
+  it.each([
+    [["admin", "pengurus"], "admin"],
+    [["admin"], "admin"],
+    [["pengurus"], "pengurus"],
+    [["something_else"], null],
+    [[], null],
+    [null, null],
+  ] as const)("%j -> %s", (roles, expected) => {
+    expect(arkRoleFrom(roles)).toBe(expected);
   });
 });

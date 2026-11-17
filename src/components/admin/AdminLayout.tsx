@@ -34,7 +34,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       .then((res) => res.json())
       .then((data) => {
         if (!data.user) {
-          router.push("/admin/login");
+          // Signed in to PI-CORE but without ARK access: the login page explains why.
+          router.push(data.access ? `/admin/login?access=${encodeURIComponent(data.access)}` : "/admin/login");
         } else {
           setUser(data.user);
         }
