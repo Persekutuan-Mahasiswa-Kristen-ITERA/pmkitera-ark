@@ -72,8 +72,9 @@ export function LoginForm({ initialError, signOutFirst }: { initialError?: strin
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label required>Email</Label>
+            <Label required htmlFor="login-email">Email</Label>
             <Input
+              id="login-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -83,8 +84,9 @@ export function LoginForm({ initialError, signOutFirst }: { initialError?: strin
           </div>
 
           <div>
-            <Label required>Kata Sandi</Label>
+            <Label required htmlFor="login-password">Kata Sandi</Label>
             <Input
+              id="login-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

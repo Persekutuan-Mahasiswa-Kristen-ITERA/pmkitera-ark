@@ -26,6 +26,8 @@ export interface ListFilter {
   page?: number;
   pageSize?: number;
   includeDrafts?: boolean;
+  /** Only with includeDrafts (staff): narrow to one status. */
+  status?: "draft" | "published";
 }
 
 function buildStorageKey(filename: string, ext: AcceptedFileExtension, eventDate: Date): string {
@@ -213,6 +215,7 @@ export async function getDocument(id: number, includeDrafts = false) {
 export async function listDocuments(filter: ListFilter = {}) {
   const where: any = {};
   if (!filter.includeDrafts) where.status = "published";
+  else if (filter.status) where.status = filter.status;
   if (filter.categoryId) where.category_id = BigInt(filter.categoryId);
   if (filter.year || filter.month) {
     where.event_date = {};

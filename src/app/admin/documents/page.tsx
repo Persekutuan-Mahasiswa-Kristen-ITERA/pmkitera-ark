@@ -13,6 +13,7 @@ export default function AdminDocumentsPage() {
   const [periods, setPeriods] = useState<Period[]>([]);
   const [view, setView] = useState<"list" | "upload">("list");
   const [refresh, setRefresh] = useState(0);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -41,7 +42,10 @@ export default function AdminDocumentsPage() {
             <List className="w-4 h-4" /> Daftar
           </button>
           <button
-            onClick={() => setView("upload")}
+            onClick={() => {
+              setNotice(null);
+              setView("upload");
+            }}
             className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
               view === "upload" ? "bg-card text-primary shadow-xs" : "text-muted"
             }`}
@@ -55,7 +59,8 @@ export default function AdminDocumentsPage() {
         <DocumentUploadForm
           categories={categories}
           periods={periods}
-          onUploadSuccess={() => {
+          onUploadSuccess={(message) => {
+            setNotice(message);
             setRefresh((p) => p + 1);
             setView("list");
           }}
@@ -64,6 +69,7 @@ export default function AdminDocumentsPage() {
         <DocumentList
           categories={categories}
           refreshTrigger={refresh}
+          notice={notice}
         />
       )}
     </div>

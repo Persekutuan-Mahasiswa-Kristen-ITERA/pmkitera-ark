@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
     page: searchParams.get("page") ? Number(searchParams.get("page")) : 1,
     pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : 12,
     includeDrafts: isStaff && searchParams.get("includeDrafts") === "true",
+    status: (["draft", "published"] as const).find((s) => s === searchParams.get("status")),
   };
 
   const result = await listDocuments(filter);

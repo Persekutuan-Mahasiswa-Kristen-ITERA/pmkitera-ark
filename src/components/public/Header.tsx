@@ -97,7 +97,7 @@ export function Footer() {
               <span className="font-serif font-bold text-lg">PMK ARK</span>
             </div>
             <p className="text-sm text-card/70 leading-relaxed">
-              Repositori dokumen pelayanan mingguan Persatuan Mahasiswa Kristen Institut Teknologi Sumatera (PMK ITERA). Satu sumber kebenaran untuk PPT Ibadah, Warta, dan Khotbah.
+              Repositori dokumen pelayanan mingguan Persekutuan Mahasiswa Kristen Institut Teknologi Sumatera (PMK ITERA). Satu sumber kebenaran untuk PPT Ibadah, Warta, dan Khotbah.
             </p>
           </div>
 

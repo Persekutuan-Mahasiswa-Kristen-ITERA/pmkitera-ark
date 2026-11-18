@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { useAdminUser } from "@/components/admin/AdminLayout";
 import { Textarea } from "@/components/ui/Textarea";
 import { Modal } from "@/components/ui/Modal";
 
@@ -17,6 +18,8 @@ interface Category {
 }
 
 export default function AdminCategoriesPage() {
+  const { isAdmin } = useAdminUser();
+  const [deleteError, setDeleteError] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -59,7 +62,7 @@ export default function AdminCategoriesPage() {
     const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });
     const data = await res.json();
     if (!res.ok) {
-      alert(data.error || "Gagal menghapus");
+      setDeleteError(data.error || "Gagal menghapus");
       return;
     }
     setDeleteTarget(null);
@@ -80,9 +83,14 @@ export default function AdminCategoriesPage() {
           <h1 className="text-3xl font-serif font-bold text-primary">Kelola Kategori</h1>
           <p className="text-sm text-muted mt-1">Master data kategori dokumen (misal: Ibadah Jumat, Warta).</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" /> Tambah Kategori
-        </Button>
+        {/* Creating and deleting are admin-only on the server; pengurus get a read-only view. */}
+        {isAdmin ? (
+          <Button onClick={() => setIsModalOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" /> Tambah Kategori
+          </Button>
+        ) : (
+          <p className="text-sm text-muted">Hanya admin ARK yang bisa menambah atau menghapus.</p>
+        )}
       </div>
 
       <Card className="p-6">
@@ -99,12 +107,18 @@ export default function AdminCategoriesPage() {
                     <span className="font-serif font-bold text-primary text-base flex items-center gap-2">
                       <FolderKanban className="w-4 h-4 text-accent" /> {cat.name}
                     </span>
-                    <button
-                      onClick={() => setDeleteTarget(cat)}
-                      className="text-red-600 hover:text-red-800 p-1"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {isAdmin ? (
+                      <button
+                        onClick={() => {
+                          setDeleteError("");
+                          setDeleteTarget(cat);
+                        }}
+                        aria-label={`Hapus ${cat.name}`}
+                        className="text-red-600 hover:text-red-800 p-1"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    ) : null}
                   </div>
                   <p className="text-xs text-muted mb-1 font-mono">slug: {cat.slug}</p>
                   <p className="text-sm text-muted">{cat.description || "Tidak ada deskripsi."}</p>
@@ -118,8 +132,9 @@ export default function AdminCategoriesPage() {
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Tambah Kategori Baru">
         <form onSubmit={handleCreate} className="space-y-4">
           <div>
-            <Label required>Nama Kategori</Label>
+            <Label required htmlFor="cat-name">Nama Kategori</Label>
             <Input
+              id="cat-name"
               value={form.name}
               onChange={(e) => {
                 const name = e.target.value;
@@ -130,8 +145,9 @@ export default function AdminCategoriesPage() {
             />
           </div>
           <div>
-            <Label required>Slug URL</Label>
+            <Label required htmlFor="cat-slug">Slug URL</Label>
             <Input
+              id="cat-slug"
               value={form.slug}
               onChange={(e) => setForm({ ...form, slug: e.target.value })}
               placeholder="ibadah-jumat"
@@ -139,8 +155,9 @@ export default function AdminCategoriesPage() {
             />
           </div>
           <div>
-            <Label>Deskripsi</Label>
+            <Label htmlFor="cat-description">Deskripsi</Label>
             <Textarea
+              id="cat-description"
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               placeholder="Penjelasan singkat kategori"
@@ -160,6 +177,7 @@ export default function AdminCategoriesPage() {
             <p className="text-sm text-muted mb-4">
               Apakah Anda yakin ingin menghapus kategori <strong className="text-primary">{deleteTarget.name}</strong>?
             </p>
+            {deleteError && <p role="alert" className="text-sm text-red-600 font-medium mb-3">{deleteError}</p>}
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setDeleteTarget(null)}>Batal</Button>
               <Button variant="danger" onClick={() => handleDelete(deleteTarget.id)}>Hapus</Button>

@@ -19,16 +19,19 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/documents?pageSize=10").then((r) => r.json()),
+      // Totals come from the server; the lists themselves are paged.
+      fetch("/api/documents?includeDrafts=true&pageSize=5").then((r) => r.json()),
+      fetch("/api/documents?includeDrafts=true&status=published&pageSize=1").then((r) => r.json()),
+      fetch("/api/documents?includeDrafts=true&status=draft&pageSize=1").then((r) => r.json()),
       fetch("/api/categories").then((r) => r.json()),
       fetch("/api/service-periods").then((r) => r.json()),
     ])
-      .then(([docsData, catsData, periodsData]) => {
+      .then(([docsData, publishedData, draftData, catsData, periodsData]) => {
         const allDocs = docsData.items || [];
         setStats({
-          totalDocuments: docsData.total || allDocs.length,
-          publishedDocuments: allDocs.filter((d: any) => d.status === "published").length,
-          draftDocuments: allDocs.filter((d: any) => d.status === "draft").length,
+          totalDocuments: docsData.total ?? 0,
+          publishedDocuments: publishedData.total ?? 0,
+          draftDocuments: draftData.total ?? 0,
           totalCategories: catsData.categories?.length || 0,
           totalPeriods: periodsData.periods?.length || 0,
           recentDocuments: allDocs.slice(0, 5),
