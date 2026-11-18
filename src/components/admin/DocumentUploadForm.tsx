@@ -22,7 +22,8 @@ interface ServicePeriod {
 interface Props {
   categories: Category[];
   periods: ServicePeriod[];
-  onUploadSuccess?: () => void;
+  /** Called with the success message; the page shows it above the list. */
+  onUploadSuccess?: (message: string) => void;
 }
 
 const ACCEPTED_TYPES = [
@@ -30,6 +31,17 @@ const ACCEPTED_TYPES = [
   "application/pdf",
 ];
 const MAX_SIZE = 50 * 1024 * 1024;
+
+/**
+ * Documents are grouped into one folder per service date (the Friday worship).
+ * Default to the coming Friday in WIB (today if it is Friday), not today.
+ */
+function nextFridayWIB(now = new Date()): string {
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta" }).format(now);
+  const d = new Date(`${today}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + ((5 - d.getUTCDay() + 7) % 7));
+  return d.toISOString().substring(0, 10);
+}
 
 export function DocumentUploadForm({ categories, periods, onUploadSuccess }: Props) {
   const [file, setFile] = useState<File | null>(null);
@@ -43,7 +55,7 @@ export function DocumentUploadForm({ categories, periods, onUploadSuccess }: Pro
     title: "",
     category_id: "",
     service_period_id: "",
-    event_date: new Date().toISOString().substring(0, 10),
+    event_date: nextFridayWIB(),
     speaker: "",
     description: "",
     status: "draft" as "draft" | "published",
@@ -109,19 +121,20 @@ export function DocumentUploadForm({ categories, periods, onUploadSuccess }: Pro
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Gagal mengunggah");
 
-      setSuccess(`Dokumen "${form.title}" berhasil diunggah sebagai ${form.status === "published" ? "Published" : "Draft"}!`);
+      const message = `Dokumen "${form.title}" berhasil diunggah sebagai ${form.status === "published" ? "Published" : "Draft"}.`;
+      setSuccess(message);
       setFile(null);
       setForm({
         title: "",
         category_id: "",
         service_period_id: "",
-        event_date: new Date().toISOString().substring(0, 10),
+        event_date: nextFridayWIB(),
         speaker: "",
         description: "",
         status: "draft",
       });
       if (fileInputRef.current) fileInputRef.current.value = "";
-      onUploadSuccess?.();
+      onUploadSuccess?.(message);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -138,7 +151,7 @@ export function DocumentUploadForm({ categories, periods, onUploadSuccess }: Pro
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Drag & Drop Zone */}
         <div>
-          <Label required>File Dokumen</Label>
+          <Label required htmlFor="doc-file">File Dokumen</Label>
           <div
             onDragOver={(e) => {
               e.preventDefault();
@@ -155,6 +168,7 @@ export function DocumentUploadForm({ categories, periods, onUploadSuccess }: Pro
                 }`}
           >
             <input
+              id="doc-file"
               ref={fileInputRef}
               type="file"
               accept=".pptx,.pdf"
@@ -192,8 +206,9 @@ export function DocumentUploadForm({ categories, periods, onUploadSuccess }: Pro
         {/* Metadata Fields */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
-            <Label required>Judul</Label>
+            <Label required htmlFor="doc-title">Judul</Label>
             <Input
+              id="doc-title"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="Contoh: PPT Ibadah Jumat - Hidup Bermakna"
@@ -202,8 +217,9 @@ export function DocumentUploadForm({ categories, periods, onUploadSuccess }: Pro
           </div>
 
           <div>
-            <Label required>Kategori</Label>
+            <Label required htmlFor="doc-category">Kategori</Label>
             <Select
+              id="doc-category"
               value={form.category_id}
               onChange={(e) => setForm({ ...form, category_id: e.target.value })}
               required
@@ -216,8 +232,9 @@ export function DocumentUploadForm({ categories, periods, onUploadSuccess }: Pro
           </div>
 
           <div>
-            <Label required>Periode Pelayanan</Label>
+            <Label required htmlFor="doc-period">Periode Pelayanan</Label>
             <Select
+              id="doc-period"
               value={form.service_period_id}
               onChange={(e) => setForm({ ...form, service_period_id: e.target.value })}
               required
@@ -230,8 +247,9 @@ export function DocumentUploadForm({ categories, periods, onUploadSuccess }: Pro
           </div>
 
           <div>
-            <Label required>Tanggal Kegiatan</Label>
+            <Label required htmlFor="doc-date">Tanggal Kegiatan</Label>
             <Input
+              id="doc-date"
               type="date"
               value={form.event_date}
               onChange={(e) => setForm({ ...form, event_date: e.target.value })}
@@ -240,8 +258,9 @@ export function DocumentUploadForm({ categories, periods, onUploadSuccess }: Pro
           </div>
 
           <div>
-            <Label required>Pengisi / Pengkhotbah</Label>
+            <Label required htmlFor="doc-speaker">Pengisi / Pengkhotbah</Label>
             <Input
+              id="doc-speaker"
               value={form.speaker}
               onChange={(e) => setForm({ ...form, speaker: e.target.value })}
               placeholder="Nama pengkhotbah atau pelayan"
@@ -249,8 +268,9 @@ export function DocumentUploadForm({ categories, periods, onUploadSuccess }: Pro
           </div>
 
           <div className="md:col-span-2">
-            <Label>Deskripsi Singkat</Label>
+            <Label htmlFor="doc-description">Deskripsi Singkat</Label>
             <Textarea
+              id="doc-description"
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               placeholder="Opsional: topik, ringkasan, atau catatan penting."
@@ -259,8 +279,9 @@ export function DocumentUploadForm({ categories, periods, onUploadSuccess }: Pro
           </div>
 
           <div>
-            <Label required>Status Publikasi</Label>
+            <Label required htmlFor="doc-status">Status Publikasi</Label>
             <Select
+              id="doc-status"
               value={form.status}
               onChange={(e) => setForm({ ...form, status: e.target.value as "draft" | "published" })}
             >
