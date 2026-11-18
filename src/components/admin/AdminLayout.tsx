@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -12,8 +12,23 @@ import {
   Menu,
   X,
   UserCheck,
+  LayoutDashboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+
+type AdminUser = { name: string; email: string; role: string };
+
+const AdminUserContext = createContext<AdminUser | null>(null);
+
+/**
+ * The signed-in admin-panel user. `isAdmin` is false for pengurus: publish,
+ * unpublish, delete and category/period changes are admin-only on the server,
+ * so pages hide those controls instead of letting them fail.
+ */
+export function useAdminUser() {
+  const user = useContext(AdminUserContext);
+  return { user, isAdmin: user?.role === "admin" };
+}
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -24,7 +39,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   // Halaman login tidak boleh dibungkus proteksi auth (mencegah loop redirect).
   const isLoginPage = pathname === "/admin/login";
-  const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(null);
+  const [user, setUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState(!isLoginPage);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
@@ -63,6 +78,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   if (!user) return null;
 
   const navItems = [
+    { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { label: "Kelola Dokumen", href: "/admin/documents", icon: FileText },
     { label: "Kategori", href: "/admin/categories", icon: FolderKanban },
     { label: "Periode Pelayanan", href: "/admin/service-periods", icon: CalendarDays },
@@ -165,7 +181,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           </div>
         )}
 
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto">{children}</main>
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto">
+          <AdminUserContext.Provider value={user}>{children}</AdminUserContext.Provider>
+        </main>
       </div>
     </div>
   );

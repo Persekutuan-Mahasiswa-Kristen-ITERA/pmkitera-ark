@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { useAdminUser } from "@/components/admin/AdminLayout";
 import { Modal } from "@/components/ui/Modal";
 
 interface Period {
@@ -16,6 +17,8 @@ interface Period {
 }
 
 export default function AdminServicePeriodsPage() {
+  const { isAdmin } = useAdminUser();
+  const [deleteError, setDeleteError] = useState("");
   const [periods, setPeriods] = useState<Period[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -61,7 +64,7 @@ export default function AdminServicePeriodsPage() {
     const res = await fetch(`/api/service-periods/${id}`, { method: "DELETE" });
     const data = await res.json();
     if (!res.ok) {
-      alert(data.error || "Gagal menghapus");
+      setDeleteError(data.error || "Gagal menghapus");
       return;
     }
     setDeleteTarget(null);
@@ -75,9 +78,14 @@ export default function AdminServicePeriodsPage() {
           <h1 className="text-3xl font-serif font-bold text-primary">Kelola Periode Pelayanan</h1>
           <p className="text-sm text-muted mt-1">Periode kepengurusan (misal: 2026/2027) untuk pengarsipan rapi.</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" /> Tambah Periode
-        </Button>
+        {/* Creating and deleting are admin-only on the server; pengurus get a read-only view. */}
+        {isAdmin ? (
+          <Button onClick={() => setIsModalOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" /> Tambah Periode
+          </Button>
+        ) : (
+          <p className="text-sm text-muted">Hanya admin ARK yang bisa menambah atau menghapus.</p>
+        )}
       </div>
 
       <Card className="p-6">
@@ -94,12 +102,18 @@ export default function AdminServicePeriodsPage() {
                     <span className="font-serif font-bold text-primary text-base flex items-center gap-2">
                       <CalendarDays className="w-4 h-4 text-accent" /> {p.name}
                     </span>
-                    <button
-                      onClick={() => setDeleteTarget(p)}
-                      className="text-red-600 hover:text-red-800 p-1"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {isAdmin ? (
+                      <button
+                        onClick={() => {
+                          setDeleteError("");
+                          setDeleteTarget(p);
+                        }}
+                        aria-label={`Hapus ${p.name}`}
+                        className="text-red-600 hover:text-red-800 p-1"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    ) : null}
                   </div>
                   <p className="text-xs text-muted">
                     Mulai: {new Date(p.start_date).toLocaleDateString("id-ID")}
@@ -117,8 +131,9 @@ export default function AdminServicePeriodsPage() {
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Tambah Periode Pelayanan">
         <form onSubmit={handleCreate} className="space-y-4">
           <div>
-            <Label required>Nama Periode</Label>
+            <Label required htmlFor="period-name">Nama Periode</Label>
             <Input
+              id="period-name"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder="Contoh: 2026/2027"
@@ -126,8 +141,9 @@ export default function AdminServicePeriodsPage() {
             />
           </div>
           <div>
-            <Label required>Tanggal Mulai</Label>
+            <Label required htmlFor="period-start">Tanggal Mulai</Label>
             <Input
+              id="period-start"
               type="date"
               value={form.start_date}
               onChange={(e) => setForm({ ...form, start_date: e.target.value })}
@@ -135,8 +151,9 @@ export default function AdminServicePeriodsPage() {
             />
           </div>
           <div>
-            <Label required>Tanggal Selesai</Label>
+            <Label required htmlFor="period-end">Tanggal Selesai</Label>
             <Input
+              id="period-end"
               type="date"
               value={form.end_date}
               onChange={(e) => setForm({ ...form, end_date: e.target.value })}
@@ -157,6 +174,7 @@ export default function AdminServicePeriodsPage() {
             <p className="text-sm text-muted mb-4">
               Apakah Anda yakin ingin menghapus periode <strong className="text-primary">{deleteTarget.name}</strong>?
             </p>
+            {deleteError && <p role="alert" className="text-sm text-red-600 font-medium mb-3">{deleteError}</p>}
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setDeleteTarget(null)}>Batal</Button>
               <Button variant="danger" onClick={() => handleDelete(deleteTarget.id)}>Hapus</Button>

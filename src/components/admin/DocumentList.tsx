@@ -8,6 +8,7 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
+import { useAdminUser } from "@/components/admin/AdminLayout";
 
 interface Category { id: number; name: string; }
 interface Document {
@@ -23,9 +24,23 @@ interface Document {
 interface Props {
   categories: Category[];
   refreshTrigger?: number;
+  /** Shown above the list, e.g. "Dokumen … berhasil diunggah" right after an upload. */
+  notice?: string | null;
 }
 
-export function DocumentList({ categories, refreshTrigger }: Props) {
+/** Reads `{ error }` / `{ message }` from a failed API response. */
+async function errorText(res: Response, fallback: string) {
+  try {
+    const body = await res.json();
+    return body?.error || body?.message || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+export function DocumentList({ categories, refreshTrigger, notice }: Props) {
+  const { isAdmin } = useAdminUser();
+  const [actionError, setActionError] = useState<string | null>(null);
   const [docs, setDocs] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -38,17 +53,13 @@ export function DocumentList({ categories, refreshTrigger }: Props) {
     const params = new URLSearchParams();
     if (search) params.append("q", search);
     if (categoryFilter) params.append("category", categoryFilter);
-    if (statusFilter) params.append("includeDrafts", "true");
-    // Tambah includeDrafts otomatis karena ini dashboard admin
+    // The admin list always includes drafts; the status filter runs on the server.
     params.append("includeDrafts", "true");
     if (statusFilter) params.append("status", statusFilter);
 
     const res = await fetch(`/api/documents?${params}`);
     const data = await res.json();
-    // Filter di client untuk status (API tidak support filter status langsung, hanya category+year+month)
-    let items = data.items || [];
-    if (statusFilter) items = items.filter((d: Document) => d.status === statusFilter);
-    setDocs(items);
+    setDocs(data.items || []);
     setLoading(false);
   };
 
@@ -59,12 +70,16 @@ export function DocumentList({ categories, refreshTrigger }: Props) {
 
   const handlePublishToggle = async (doc: Document) => {
     const newStatus = doc.status === "published" ? "unpublish" : "publish";
-    await fetch(`/api/documents/${doc.id}/${newStatus}`, { method: "POST" });
+    setActionError(null);
+    const res = await fetch(`/api/documents/${doc.id}/${newStatus}`, { method: "POST" });
+    if (!res.ok) setActionError(await errorText(res, "Gagal mengubah status dokumen. Coba lagi."));
     fetchDocs();
   };
 
   const handleDelete = async (doc: Document) => {
-    await fetch(`/api/documents/${doc.id}`, { method: "DELETE" });
+    setActionError(null);
+    const res = await fetch(`/api/documents/${doc.id}`, { method: "DELETE" });
+    if (!res.ok) setActionError(await errorText(res, "Gagal menghapus dokumen. Coba lagi."));
     setConfirmDelete(null);
     fetchDocs();
   };
@@ -79,6 +94,17 @@ export function DocumentList({ categories, refreshTrigger }: Props) {
         </div>
       </div>
 
+      {notice ? (
+        <p role="status" className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          {notice}
+        </p>
+      ) : null}
+      {actionError ? (
+        <p role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {actionError}
+        </p>
+      ) : null}
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-5">
         <div className="md:col-span-2 relative">
           <Search className="absolute left-3 top-3.5 w-4 h-4 text-muted" />
@@ -86,16 +112,17 @@ export function DocumentList({ categories, refreshTrigger }: Props) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari judul atau pengisi..."
+            aria-label="Cari judul atau pengisi"
             className="pl-9"
           />
         </div>
-        <Select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+        <Select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} aria-label="Filter kategori">
           <option value="">Semua Kategori</option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
         </Select>
-        <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+        <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} aria-label="Filter status">
           <option value="">Semua Status</option>
           <option value="published">Published</option>
           <option value="draft">Draft</option>
@@ -149,12 +176,17 @@ export function DocumentList({ categories, refreshTrigger }: Props) {
                           if (data.downloadUrl) window.open(data.downloadUrl, "_blank");
                         }}
                         title="Download"
+                        aria-label={`Download ${doc.title}`}
                         className="p-2 rounded-md text-muted hover:bg-app-alt hover:text-primary"
                       >
                         <Download className="w-4 h-4" />
                       </a>
+                      {/* Publish/unpublish and delete are admin-only on the server. */}
+                      {isAdmin ? (
+                      <>
                       <button
                         onClick={() => handlePublishToggle(doc)}
+                        aria-label={doc.status === "published" ? `Unpublish ${doc.title}` : `Publish ${doc.title}`}
                         title={doc.status === "published" ? "Unpublish" : "Publish"}
                         className="p-2 rounded-md text-muted hover:bg-app-alt hover:text-primary"
                       >
@@ -163,10 +195,13 @@ export function DocumentList({ categories, refreshTrigger }: Props) {
                       <button
                         onClick={() => setConfirmDelete(doc)}
                         title="Hapus"
+                        aria-label={`Hapus ${doc.title}`}
                         className="p-2 rounded-md text-red-600 hover:bg-red-50"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
+                      </>
+                      ) : null}
                     </div>
                   </td>
                 </tr>
